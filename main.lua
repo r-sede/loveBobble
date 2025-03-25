@@ -12,6 +12,8 @@ function love.load(args)
 
   ASSETS = require('src/assets')
 
+  -- print(type('blue'))
+  -- print(type({'qqdqs', 'sqddsd'}) == 'table')
   GS.registerEvents()
   GS.switch(MenuState)
 end

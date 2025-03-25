@@ -3,6 +3,9 @@ local Map = {}
 
 Map.map = {}
 
+Map.ballBag = Stack()
+Map.alreadyChecked = {}
+Map.connectedBalls = {}
 
 function Map:getMap()
     return self.map
@@ -10,56 +13,35 @@ end
 
 function Map:resetMap()
     self.map = {
-        {0, 0, 0, 0, 0, 0, 0, 0},
-          {0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0},
-          {0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0},
-          {0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0},
-          {0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0},
-          {0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0},
-          {0, 0, 0, 0, 0, 0, 0},
+        {false, false, false, false, false, false, false, false},
+          {false, false, false, false, false, false, false},
+        {false, false, false, false, false, false, false, false},
+          {false, false, false, false, false, false, false},
+        {false, false, false, false, false, false, false, false},
+          {false, false, false, false, false, false, false},
+        {false, false, false, false, false, false, false, false},
+          {false, false, false, false, false, false, false},
+        {false, false, false, false, false, false, false, false},
+          {false, false, false, false, false, false, false},
+        {false, false, false, false, false, false, false, false},
+          {false, false, false, false, false, false, false},
     }
-    for yy = 1, #self.map do
-        for xx = 1, #self.map[yy] do
-            self.map[yy][xx] = {
-                ['value'] = nil,
-            }
-        end
-    end
+
 end
 
 function Map:fillRandomMap(lineToFill, avalaibleToken)
     for yy = 1, math.min(lineToFill, #self.map) do
         for xx = 1, #self.map[yy] do
-            local token = avalaibleToken[math.random(#avalaibleToken)]
-            self.map[yy][xx] = token
+            self.map[yy][xx] = Bubble(avalaibleToken, xx, yy)
         end
     end
 end
 
 function Map:draw()
-    local xxTodraw = nil
     for yy = 1, #self.map do
         for xx = 1, #self.map[yy] do
-            if self.map[yy][xx] ~= 0 then 
-                if yy%2 == 0 then
-                    xxTodraw = (xx - 1) * BLOCKSIZE * SCALE + (0.5 * BLOCKSIZE * SCALE)
-                else
-                    xxTodraw = (xx - 1) * BLOCKSIZE * SCALE
-                end
-
-                love.graphics.draw(
-                    self.Texture[self.map[yy][xx]],
-                    xxTodraw,
-                    (yy - 1) * BLOCKSIZE * SCALE, -- - ( (yy-1) * BLOCKSIZE * SCALE * 0.125),
-                    0,
-                    SCALE,
-                    SCALE
-                )
+            if self.map[yy][xx] then 
+                self.map[yy][xx]:draw()
             end
         end
     end
@@ -67,38 +49,31 @@ end
 
 
 function Map:insertIn(x, y, color)
-    local token = nil
+    local bubble = Bubble(color, x, y)
 
-    if color == 0 then
-        token = 'r'
-    elseif color == 1 then
-        token = 'g'
-    elseif color == 2 then
-        token ='b'
-    end
+    self.map[y][x] = bubble
 
-    self.map[y][x] = token
-    self:flood(x, y, token)
+    self:flood(x, y, bubble)
 
     if (self.ballBag.count > 2) then
         while self.ballBag.count > 0 do
-            local p = self.ballBag:pop()
-            self.map[p['y']][p['x']] = 0
+            local b = self.ballBag:pop()
+            print(b)
+            -- print(b.tableX)
+            self.map[b['y']][b['x']] = false
         end
     end
 
-
-
-    for xx = 1, #self.map[1] do
-        self:searchConnected(xx, 1)
-    end
-    for yy = 1, #self.map do
-        for xx = 1, #self.map[yy] do
-            if not self.connectedBalls[xx..''..yy] then
-                self.map[yy][xx] = 0
-            end
-        end
-    end
+    -- for xx = 1, #self.map[1] do
+    --     self:searchConnected(xx, 1)
+    -- end
+    -- for yy = 1, #self.map do
+    --     for xx = 1, #self.map[yy] do
+    --         if not self.connectedBalls[xx..''..yy] then
+    --             self.map[yy][xx] = 0
+    --         end
+    --     end
+    -- end
     self.ballBag = Stack()
     self.alreadyChecked = {}
     self.connectedBalls = {}
@@ -130,10 +105,12 @@ function Map:searchConnected(x, y)
     return
 end
 
-function Map:flood(x, y, token)
-    if (y < 1 or y > #self.map) or (x < 1 or x > #self.map[y]) then return end
-  
-    if self.map[y][x] ~= token then return end
+function Map:flood(x, y, bubble)
+    -- check that we are not outside the 'board' and there is a bubble here
+    if (y < 1 or y > #self.map) or (x < 1 or x > #self.map[y]) or not self.map[y][x] then return end
+    
+    local bubbleHere = self.map[y][x]
+    if bubbleHere.color ~= bubble.color then return end
 
     if self.alreadyChecked[x..''..y] == true then return end
     
@@ -145,19 +122,19 @@ function Map:flood(x, y, token)
     self.alreadyChecked[x..''..y] = true 
     
     if y%2 == 0 then -- ligne de 7
-        self:flood(x+1, y+1, token) --sud ouest
-        self:flood(x, y+1, token) --sud est
-        self:flood(x, y-1, token) --nord ouest
-        self:flood(x+1, y-1, token) --nord ouest
+        self:flood(x+1, y+1, bubble) --sud ouest
+        self:flood(x, y+1, bubble) --sud est
+        self:flood(x, y-1, bubble) --nord ouest
+        self:flood(x+1, y-1, bubble) --nord ouest
     else -- ligne de 8
-        self:flood(x-1, y+1, token) --sud ouest
-        self:flood(x, y+1, token) --sud est
-        self:flood(x-1, y-1, token) --nord ouest
-        self:flood(x, y-1, token) --nord ouest
+        self:flood(x-1, y+1, bubble) --sud ouest
+        self:flood(x, y+1, bubble) --sud est
+        self:flood(x-1, y-1, bubble) --nord ouest
+        self:flood(x, y-1, bubble) --nord ouest
     end
 
-    self:flood(x-1, y, token)
-    self:flood(x+1, y, token)
+    self:flood(x-1, y, bubble)
+    self:flood(x+1, y, bubble)
     return
 end
 
