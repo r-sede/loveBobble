@@ -4,7 +4,6 @@ function MenuState:init()
   self.menuItems = {}
   self.menuItems[0] = 'game'
   self.menuItems[1] = 'quit'
-  self.menuItems[2] = 'test'
   --self.background = love.graphics.newImage('assets/bg.jpg')
 end
 
@@ -43,8 +42,6 @@ function MenuState:keypressed(key, code)
       love.event.quit()
     elseif self.menuItems[self.cursor%(#self.menuItems+1)] == 'game' then
       GS.switch(GameState)
-    elseif self.menuItems[self.cursor%(#self.menuItems+1)] == 'test' then
-      GS.switch(TestFloodAlg)
     end
   end
 end
