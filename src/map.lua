@@ -7,6 +7,8 @@ Map.ballBag = Stack()
 Map.alreadyChecked = {}
 Map.connectedBalls = {}
 
+Map.fallingAndExplodingBubbles = {}
+
 function Map:getMap()
     return self.map
 end
@@ -45,6 +47,24 @@ function Map:draw()
             end
         end
     end
+
+    -- for i=1,#self.fallingAndExplodingBubbles do
+    --     self.fallingAndExplodingBubbles[i]:draw()
+    -- end
+
+end
+function Map:update()
+    for yy = 1, #self.map do
+        for xx = 1, #self.map[yy] do
+            if self.map[yy][xx] then
+                self.map[yy][xx]:update()
+            end
+        end
+    end
+
+    for i=1,#self.fallingAndExplodingBubbles do
+        self.fallingAndExplodingBubbles[i]:update()
+    end
 end
 
 
@@ -57,33 +77,39 @@ function Map:insertIn(x, y, color)
 
     if (self.ballBag.count > 2) then
         while self.ballBag.count > 0 do
+            -- add score here
             local b = self.ballBag:pop()
-            print(b)
-            -- print(b.tableX)
-            self.map[b['y']][b['x']] = false
+            self.map[b.tableY][b.tableX] = false
+            b:setState('exploding')
+            table.insert(self.fallingAndExplodingBubbles, b)
         end
     end
 
-    -- for xx = 1, #self.map[1] do
-    --     self:searchConnected(xx, 1)
-    -- end
-    -- for yy = 1, #self.map do
-    --     for xx = 1, #self.map[yy] do
-    --         if not self.connectedBalls[xx..''..yy] then
-    --             self.map[yy][xx] = 0
-    --         end
-    --     end
-    -- end
-    self.ballBag = Stack()
-    self.alreadyChecked = {}
-    self.connectedBalls = {}
+    self:resetBag()
+
+    -- check for disconected bubble 
+    for xx = 1, #self.map[1] do
+        self:searchConnected(xx, 1)
+    end
+
+    for yy = 1, #self.map do
+        for xx = 1, #self.map[yy] do
+            if not self.connectedBalls[xx..''..yy] and self.map[yy][xx]then
+                -- add score here ??
+                local b = self.map[yy][xx]
+                b:setState('falling')
+                table.insert(self.fallingAndExplodingBubbles, b)
+                self.map[yy][xx] = false
+            end
+        end
+    end
+    self:resetBag()
 end
 
 function Map:searchConnected(x, y)
-    if (y < 1 or y > #self.map) or (x < 1 or x > #self.map[y]) then return end
+    -- check that we are not outside the 'board' and there is a bubble here
+    if (y < 1 or y > #self.map) or (x < 1 or x > #self.map[y]) or not self.map[y][x] then return end
   
-    if self.map[y][x] == 0 then return end
-
     if self.connectedBalls[x..''..y] == true then return end
     
     self.connectedBalls[x..''..y] = true 
@@ -114,10 +140,7 @@ function Map:flood(x, y, bubble)
 
     if self.alreadyChecked[x..''..y] == true then return end
     
-    self.ballBag:push(
-        {['x']=x, ['y']=y}
-    )
-    -- print(x..''..y)
+    self.ballBag:push(bubbleHere)
 
     self.alreadyChecked[x..''..y] = true 
     
@@ -138,5 +161,10 @@ function Map:flood(x, y, bubble)
     return
 end
 
+function Map:resetBag()
+    self.ballBag = Stack()
+    self.alreadyChecked = {}
+    self.connectedBalls = {}
+end
 
 return Map

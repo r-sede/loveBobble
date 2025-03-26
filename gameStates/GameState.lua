@@ -15,7 +15,7 @@ end
 function GameState:enter(previous)
   Map:resetMap()
   Map:fillRandomMap(3, {'red', 'green', 'blue', 'yellow'})
-  playerBubble = Bubble('red', 1 , 4)
+  playerBubble = Bubble('green', 1 , 4)
 end
 
 --Called when leaving a state. See Gamestate.switch() and Gamestate.pop().
