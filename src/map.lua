@@ -42,7 +42,7 @@ end
 function Map:draw()
     for yy = 1, #self.map do
         for xx = 1, #self.map[yy] do
-            if self.map[yy][xx] then 
+            if not self.map[yy][xx] == false then
                 self.map[yy][xx]:draw()
             end
         end
@@ -53,23 +53,28 @@ function Map:draw()
     -- end
 
 end
-function Map:update()
+function Map:update(dt)
     for yy = 1, #self.map do
         for xx = 1, #self.map[yy] do
-            if self.map[yy][xx] then
-                self.map[yy][xx]:update()
+            if not self.map[yy][xx] == false then
+                self.map[yy][xx]:update(dt)
             end
         end
     end
 
-    for i=1,#self.fallingAndExplodingBubbles do
-        self.fallingAndExplodingBubbles[i]:update()
+    for i=#self.fallingAndExplodingBubbles, 1, -1 do
+        self.fallingAndExplodingBubbles[i]:update(dt)
+        if self.fallingAndExplodingBubbles[i].shouldBeRemoved then
+            table.remove(self.fallingAndExplodingBubbles, i)
+        end
     end
 end
 
 
 function Map:insertIn(x, y, color)
     local bubble = Bubble(color, x, y)
+
+    bubble:setState('inserted')
 
     self.map[y][x] = bubble
 

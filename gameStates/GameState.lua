@@ -27,6 +27,7 @@ function GameState:resume()
 end     
 
 function GameState:update(dt)
+  Map:update(dt)
   playerBubble:update(dt)
   -- playerCursor = (playerCursor-1 % 7)
   -- playerColorCursor = (playerColorCursor-1 %4)

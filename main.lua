@@ -5,15 +5,13 @@ require('gameStates/states')
 -- CONST
 BLOCKSIZE = 16
 SCALE     = 4
-ASSETS = nil
+ASSETS    = nil
 
 function love.load(args)
   love.graphics.setDefaultFilter('nearest', 'nearest')
 
   ASSETS = require('src/assets')
 
-  -- print(type('blue'))
-  -- print(type({'qqdqs', 'sqddsd'}) == 'table')
   GS.registerEvents()
   GS.switch(MenuState)
 end
