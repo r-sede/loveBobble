@@ -48,9 +48,9 @@ function Map:draw()
         end
     end
 
-    -- for i=1,#self.fallingAndExplodingBubbles do
-    --     self.fallingAndExplodingBubbles[i]:draw()
-    -- end
+    for i=1,#self.fallingAndExplodingBubbles do
+        self.fallingAndExplodingBubbles[i]:draw()
+    end
 
 end
 function Map:update(dt)

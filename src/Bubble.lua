@@ -2,7 +2,6 @@ local states = {}
 
 states.idle = function (self, dt)
     --this is temp
-    self.keyframe = 1
     if self.tableY%2 == 0 then
         self.drawX = (self.tableX - 1) * BLOCKSIZE * SCALE + (0.5 * BLOCKSIZE * SCALE)
     else
@@ -12,12 +11,27 @@ states.idle = function (self, dt)
 end
 
 states.falling = function (self, dt)
+    self.velY = self.velY + (1500 * 9.8) * dt
+
+    self.drawX =  self.drawX + self.velX  * dt
+    self.drawY =  self.drawY + self.velY * dt
+    self.angle = math.atan2(self.velY, self.velX)
+
+    if self.drawY >= love.graphics.getHeight() + BLOCKSIZE * SCALE then
+        self.shouldBeRemoved = true
+    end
 
 end
 
 states.exploding = function (self, dt)
-
-    self.shouldBeRemoved = true
+    self.animTimer = self.animTimer - dt
+    if self.animTimer <= 0 then
+        self.animTimer = 1 / self.fps
+        self.keyframe = self.keyframe + 1
+        if self.keyframe > self.nbrFrame then
+            self.shouldBeRemoved = true
+        end
+    end
 end
 
 states.monster = function (self, dt)
@@ -77,7 +91,7 @@ function Bubble(color, x, y)
                 self.drawX, self.drawY, 0,
                 SCALE, SCALE
             )
-            love.graphics.print(self.state, self.drawX, self.drawY)
+            -- love.graphics.print(self.state, self.drawX, self.drawY)
         end,
 
         update = function(self, dt)
